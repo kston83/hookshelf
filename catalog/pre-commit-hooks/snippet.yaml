@@ -1,0 +1,6 @@
+  # Private keys and unresolved merge conflicts (blocks).
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: detect-private-key
+      - id: check-merge-conflict
