@@ -15,6 +15,15 @@ Curated, pinned pre-commit security hooks that you copy into your repo and own.
 Every hook comes from the tool provider's own repo. Once copied, nothing in your repo
 depends on this one.
 
+## Working on this repo
+
+This repo uses [uv](https://docs.astral.sh/uv/) and Python 3.14 (uv installs it for you):
+
+```sh
+uv sync
+uv run pytest
+```
+
 ## License
 
 Apache-2.0
