@@ -1,0 +1,15 @@
+# CLAUDE.md
+
+Read [docs/design.md](docs/design.md) first. It sets the goal, the audiences, the principles
+and the non-goals for everything in this repo.
+
+Before adding anything, check: does a team's repo still work if this repo disappears? If
+a provider hook seems to need a wrapper, stop and ask.
+
+## Working rules
+
+- Pin every `rev` and action to a version you checked with `git ls-remote --tags`. Never
+  guess a version or SHA.
+- Prefer a provider's remote hook with a pinned `rev` over a `repo: local` hook.
+- Test with real `pre-commit` runs on `tests/fixtures/`, not only unit tests.
+- Keep each PR reviewable in about 15 minutes.
