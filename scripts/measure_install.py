@@ -53,7 +53,11 @@ def disk_use(path):
 
 def env_without_go():
     go = "go.exe" if os.name == "nt" else "go"
-    path = [p for p in os.environ["PATH"].split(os.pathsep) if not (Path(p) / go).is_file()]
+    dirs = os.environ["PATH"].split(os.pathsep)
+    go_dirs = [d for d in dirs if (Path(d) / go).is_file()]
+    if any(shutil.which("git", path=d) for d in go_dirs):
+        sys.exit("--without-go: Go is in the same folder as git (e.g. /usr/bin), so it can't be hidden.")
+    path = [d for d in dirs if d not in go_dirs]
     return {**os.environ, "PATH": os.pathsep.join(path), "GOROOT": ""}
 
 

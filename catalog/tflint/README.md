@@ -13,8 +13,15 @@ for providers and Terraform, unused variables and locals, deprecated syntax. It 
 tflint ships no pre-commit hook, so the snippet is a short `repo: local` hook. On first
 run pre-commit builds the pinned tflint with Go, and downloads Go first if it isn't
 installed.
-Measured on a Windows laptop without Go: the first run took about 10 minutes and used about
-335 MB of disk (the Go toolchain, tflint's modules and the build). Later runs take seconds.
+| Machine | First run | Disk |
+|---|---|---|
+| GitHub runners (Linux, Windows), Go installed | 1.4–2 min | about 80 MB |
+| GitHub runners (macOS, Windows), pre-commit downloads Go | 0.5–2.5 min | 305–315 MB |
+| Older Windows laptop (2017 i5, Defender on), no Go | about 10 min | about 335 MB |
+
+Most of the time goes into compiling tflint, so a slow CPU hurts most here. Later runs
+take seconds. To measure your own machine, run `uv run scripts/measure_install.py tflint`
+from a clone of hookshelf.
 
 Networks that block `proxy.golang.org` or `go.dev` stop this install.
 

@@ -11,8 +11,14 @@ relative `WORKDIR`), plus ShellCheck findings inside `RUN` instructions.
 
 The hook comes from `AleksaC/hadolint-py`, which packages the hadolint binary as a Python
 wheel, so you need neither Docker nor a system install.
-Measured on a Windows laptop: the first run took under a minute and used about 180 MB of
-disk (the hadolint binary plus a Python environment). Later runs take well under a second.
+| Machine | First run | Disk |
+|---|---|---|
+| GitHub runners (Linux, macOS, Windows) | under 15 s | 120–210 MB |
+| Older Windows laptop (2017 i5, Defender on) | under 1 min | about 180 MB |
+
+The disk is the hadolint binary plus a Python environment. Later runs take well under a
+second. To measure your own machine, run `uv run scripts/measure_install.py hadolint`
+from a clone of hookshelf.
 
 ## Files
 

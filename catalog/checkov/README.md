@@ -14,8 +14,13 @@ Misconfigurations in Terraform and Dockerfiles, for example:
 
 The hook is `language: python`. On first run pre-commit installs checkov and its
 dependencies, about 100 Python packages, into its cache.
-Measured on a Windows laptop: the first run took about 6 minutes and used about 360 MB of
-disk. Later runs take a few seconds.
+| Machine | First run | Disk |
+|---|---|---|
+| GitHub runners (Linux, macOS, Windows) | 0.6–1.2 min | 290–335 MB |
+| Older Windows laptop (2017 i5, Defender on) | about 6 min | about 360 MB |
+
+Later runs take a few seconds. To measure your own machine, run
+`uv run scripts/measure_install.py checkov` from a clone of hookshelf.
 
 On Windows, pre-commit clones checkov's whole repo, which has paths up to 173 characters
 long. With pre-commit's default cache (`%USERPROFILE%\.cache\pre-commit`) that fits within
