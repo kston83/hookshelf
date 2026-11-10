@@ -1,0 +1,16 @@
+# hadolint config. hadolint reads .hadolint.yaml from the directory it runs in (the repo root).
+# Docs: https://github.com/hadolint/hadolint#configure
+
+# Warn mode: findings print, but the commit goes through. Delete this line to block
+# on rules at or above failure-threshold.
+no-fail: true
+failure-threshold: error
+
+# Rules to ignore in this repo, each with a reason, for example:
+# ignored:
+#   - DL3008  # apt versions aren't pinned: we rebuild nightly from a pinned base image
+ignored: []
+
+# Only allow base images from approved registries (turns on DL3026), e.g. your Artifactory:
+# trustedRegistries:
+#   - mycompany.jfrog.io

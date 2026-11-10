@@ -1,0 +1,27 @@
+# checkov config. checkov reads .checkov.yaml from the repo root automatically.
+# Docs: https://www.checkov.io/2.Basics/CLI%20Command%20Reference.html
+
+# Only scan Terraform and Dockerfiles. Without this, checkov scans every framework it
+# knows (Kubernetes, Helm, CI files, secrets ...).
+framework:
+  - terraform
+  - dockerfile
+
+# Warn mode: findings print, but the commit goes through. Delete this line to block.
+soft-fail: true
+
+# Short output: failed checks only, no code snippets.
+compact: true
+quiet: true
+
+# Work offline: nothing from Prisma Cloud, no fetching of external Terraform modules.
+skip-download: true
+download-external-modules: false
+
+# Checks many teams find noisy. Uncomment the ones that don't apply to you, and keep
+# a reason next to each.
+# skip-check:
+#   - CKV_AWS_144   # S3 cross-region replication is a DR decision, not a per-bucket security control
+#   - CKV2_AWS_62   # S3 event notifications are a feature, not a security control
+#   - CKV2_AWS_61   # S3 lifecycle configuration is cost hygiene, not a security control
+#   - CKV_DOCKER_2  # HEALTHCHECK usually comes from the orchestrator (Kubernetes probes, ECS)

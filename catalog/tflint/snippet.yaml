@@ -1,0 +1,15 @@
+  # Terraform mistakes and deprecated syntax (warns). Remove --force to block.
+  # tflint ships no pre-commit hook, so this local hook has pre-commit build the
+  # pinned tflint with Go. Bump the version below by hand.
+  - repo: local
+    hooks:
+      - id: tflint
+        name: tflint
+        language: golang
+        additional_dependencies: [github.com/terraform-linters/tflint@v0.66.0]
+        entry: tflint --recursive
+        args: [--force]
+        files: \.(tf|tf\.json|tfvars)$
+        pass_filenames: false
+        require_serial: true
+        verbose: true

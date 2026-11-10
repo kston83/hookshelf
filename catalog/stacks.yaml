@@ -3,3 +3,11 @@
 base:
   recommended: [gitleaks, pre-commit-hooks]
   optional: []
+
+terraform:
+  recommended: [checkov]
+  optional: [tflint]
+
+docker:
+  recommended: [checkov]
+  optional: [hadolint]
