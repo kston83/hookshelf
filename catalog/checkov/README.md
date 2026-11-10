@@ -39,7 +39,8 @@ tfvars, Terraform JSON and Dockerfiles trigger a scan too.
 
 The hook runs when a commit includes a `.tf`, `.tf.json` or `.tfvars` file, or a
 Dockerfile. It then scans the whole repo, not just the files you changed, so findings in
-files you didn't touch show up too.
+files you didn't touch show up too. To stop old findings from blocking commits once you
+switch to block, see [Baseline the backlog](#baseline-the-backlog).
 
 Here's a trimmed run on an insecure Terraform file, in warn mode:
 
@@ -111,11 +112,96 @@ checkov doesn't read OpenTofu's `.tofu` files (checked with 3.4.3).
 ## Warn, then block
 
 `soft-fail: true` in `.checkov.yaml` prints findings, but the commit goes through. Delete
-that line once the findings are cleaned up, and checkov blocks commits.
+that line, and checkov blocks commits.
 
 Because checkov scans the whole repo, a blocking checkov stops any commit that touches a
 Terraform file or Dockerfile while a finding remains anywhere in the repo, even in a file
-the commit doesn't change. Fix or skip everything it reports before you switch.
+the commit doesn't change. Before you switch, either:
+
+- **Clear the backlog:** fix or skip everything it reports (see [Tuning](#tuning)), or
+- **Baseline it:** record today's findings so that only new ones block, and track the old
+  ones as work to do. See below.
+
+checkov also has a `checkov_diff` hook that scans only the staged files. We don't use it.
+It still reports every old finding in a file you touch, and it can't see the rest of the
+module. For example, with a security group in `sg.tf`, its CIDR in a variable in
+`vars.tf` and the network interface that uses it in `ec2.tf`, scanning `sg.tf` alone
+misses `CKV_AWS_24` (SSH open to the world) and falsely reports `CKV2_AWS_5` (security
+group not attached). Checked with 3.4.3.
+
+### Baseline the backlog
+
+A baseline is a file, `.checkov.baseline`, listing each resource and the checks it fails
+today. checkov stops failing on those, so commits are only blocked by new findings. The
+old findings still need fixing: the baseline is a backlog, not an exception list.
+
+1. **Record today's findings** while you're still in warn mode. Run this from your repo
+   root. checkov lives inside pre-commit's cache, so this runs a separate copy with
+   [uv](https://docs.astral.sh/uv/). Keep its version the same as the snippet's `rev`:
+
+   ```sh
+   uvx --python 3.14 --from checkov==3.4.3 checkov -d . --create-baseline --baseline ""
+   ```
+
+   It prints the findings and writes `.checkov.baseline`. The first run installs checkov
+   again, which takes about as long as the hook's first run (see
+   [What installs locally](#what-installs-locally)). `--baseline ""` ignores any baseline
+   already set in `.checkov.yaml`. Without it, checkov writes an empty baseline when one
+   is set (checked with 3.4.3).
+
+2. **Track the backlog outside the repo.** Put the printed findings in your team's issue
+   tracker with an owner and a date: one ticket with the list, or one per resource.
+
+3. **Switch to block.** In `.checkov.yaml`, uncomment `baseline:` and
+   `output-baseline-as-skipped:`, and delete `soft-fail: true`. Commit both files in one
+   pull request that links the ticket.
+
+From then on, only findings that aren't in the baseline fail the hook. Baselined ones
+count under `Skipped checks` on every run, so the backlog stays in view. Here a commit adds
+a security group open on port 3389 to a repo with 13 baselined findings:
+
+```text
+Checkov..................................................................Failed
+- hook id: checkov
+- duration: 9.01s
+- exit code: 1
+
+terraform scan results:
+
+Passed checks: 0, Failed checks: 2, Skipped checks: 13
+
+Check: CKV_AWS_25: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
+	FAILED for resource: aws_security_group.rdp_open
+	File: \main.tf:34-44
+...
+```
+
+**Working the backlog down:**
+
+- To print everything, baselined or not, run the step 1 command without
+  `--create-baseline`.
+- After you fix findings, run the step 1 command again and commit the new
+  `.checkov.baseline`. Its diff should only remove lines. An added line means a new
+  finding is being accepted without review. Fix it, or skip it inline with a reason (see
+  [Tuning](#tuning)), so the reason sits next to the code.
+- Review changes to `.checkov.baseline` like code. If your Git host supports code owners,
+  make your security reviewer an owner of it.
+- When the backlog is done, delete the two baseline lines from `.checkov.yaml`, then
+  delete `.checkov.baseline`.
+
+**What the baseline matches on:** a resource address and a check ID, not a file or line
+(checked with 3.4.3). So:
+
+- Editing a file, or moving a Terraform resource to another file, doesn't bring its
+  findings back. Renaming the resource does.
+- Two resources with the same address in different folders, such as `aws_s3_bucket.logs`
+  in both `envs/dev` and `envs/prod`, share one entry. If one is baselined, the same
+  findings in the other are hidden too. Print everything (above) when you add a folder.
+- A Dockerfile's address is its path, like `/app\Dockerfile.RUN` on Windows. Moving a
+  Dockerfile brings its findings back. Windows writes the path with `\` and macOS and
+  Linux with `/`, so a baselined Dockerfile in a subfolder only matches on the kind of
+  OS that made the baseline. If your team commits from both, fix or skip Dockerfile
+  findings inline instead of baselining them.
 
 ## Tuning
 

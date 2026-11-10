@@ -5,11 +5,14 @@ tool's warn switch is one line (soft-fail, --force, no-fail); deleting it makes 
 same findings block.
 """
 
+import os
 import re
+import shlex
+import subprocess
 
 import pytest
 
-from conftest import CATALOG, expect, make_repo, run_pre_commit
+from conftest import CATALOG, FIXTURES, commit, expect, make_repo, run_pre_commit, write
 
 BASE = ["gitleaks", "pre-commit-hooks"]
 BASE_HOOKS = {"Detect hardcoded secrets", "detect private key", "check for merge conflicts"}
@@ -71,6 +74,43 @@ def test_insecure_fixture_warns_then_blocks(tmp_path, stack, expected):
     block_mode(repo)
     results, out = run_pre_commit(repo, "--all-files")
     expect(results, out, hooks, set(expected))
+
+
+def readme_command(heading, prefix):
+    """The first line in a README section's code blocks that starts with `prefix`."""
+    text = (CATALOG / "checkov" / "README.md").read_text(encoding="utf-8")
+    section = text.split(f"### {heading}\n", 1)[1]
+    return next(line.strip() for line in section.splitlines() if line.strip().startswith(prefix))
+
+
+def test_checkov_baseline_blocks_only_new_findings(tmp_path):
+    repo = make_repo(tmp_path, ["checkov"], "terraform/insecure")
+    commit(repo)
+
+    # step 1 of the README, run as written (uv runs pytest, and sets UV to its own path)
+    command = readme_command("Baseline the backlog", "uvx ")
+    rev = re.search(r"rev: (\S+)", (CATALOG / "checkov" / "snippet.yaml").read_text()).group(1)
+    assert f"checkov=={rev} " in command, (rev, command)
+    uv = os.environ.get("UV", "uv")
+    proc = subprocess.run([uv, "tool", "run", *shlex.split(command)[1:]], cwd=repo,
+                          capture_output=True, text=True, encoding="utf-8", errors="replace")
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "CKV_AWS_24" in (repo / ".checkov.baseline").read_text()
+
+    # step 3: uncomment the baseline lines and delete soft-fail. The old findings pass.
+    edit(repo / ".checkov.yaml", "# baseline:", "baseline:")
+    edit(repo / ".checkov.yaml", "# output-baseline-as-skipped:", "output-baseline-as-skipped:")
+    block_mode(repo)
+    results, out = run_pre_commit(repo, "--all-files")
+    expect(results, out, {CHECKOV}, set())
+    assert not findings(out)[CHECKOV], out
+    assert re.search(r"Failed checks: 0, Skipped checks: [1-9]", out), out
+
+    # a new finding blocks, and only it is reported
+    write(repo, "rdp.tf", (FIXTURES / "terraform" / "new-finding" / "rdp.tf").read_text())
+    results, out = run_pre_commit(repo, "--all-files")
+    expect(results, out, {CHECKOV}, {CHECKOV})
+    assert "CKV_AWS_25" in findings(out)[CHECKOV] and "CKV_AWS_24" not in out, out
 
 
 @pytest.mark.parametrize("stack", ["terraform", "docker"])
