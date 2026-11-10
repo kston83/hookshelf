@@ -200,8 +200,9 @@ Check: CKV_AWS_25: "Ensure no security groups allow ingress from 0.0.0.0:0 to po
 - A Dockerfile's address is its path, like `/app\Dockerfile.RUN` on Windows. Moving a
   Dockerfile brings its findings back. Windows writes the path with `\` and macOS and
   Linux with `/`, so a baselined Dockerfile in a subfolder only matches on the kind of
-  OS that made the baseline. If your team commits from both, fix or skip Dockerfile
-  findings inline instead of baselining them.
+  OS that made the baseline. A Dockerfile at the repo root matches everywhere. Checked
+  with 3.4.3 on Windows, Ubuntu and macOS. If your team commits from both kinds of OS,
+  fix or skip Dockerfile findings inline instead of baselining them.
 
 ## Tuning
 
