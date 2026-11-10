@@ -33,7 +33,9 @@ have those yet, start with [setup](../../docs/setup.md).
    findings and still says `Passed`.
 
 The snippet overrides the provider hook's `files:`, which only covers `.tf`, so that
-tfvars, Terraform JSON and Dockerfiles trigger a scan too.
+tfvars, Terraform JSON and Dockerfiles trigger a scan too. Its second hook,
+`checkov-baseline`, only runs when you ask for it. See
+[Baseline the backlog](#baseline-the-backlog).
 
 ## When it fires
 
@@ -135,19 +137,18 @@ A baseline is a file, `.checkov.baseline`, listing each resource and the checks 
 today. checkov stops failing on those, so commits are only blocked by new findings. The
 old findings still need fixing: the baseline is a backlog, not an exception list.
 
-1. **Record today's findings** while you're still in warn mode. Run this from your repo
-   root. checkov lives inside pre-commit's cache, so this runs a separate copy with
-   [uv](https://docs.astral.sh/uv/). Keep its version the same as the snippet's `rev`:
+1. **Record today's findings** while you're still in warn mode. The snippet's second hook,
+   `checkov-baseline`, only runs when you ask for it:
 
    ```sh
-   uvx --python 3.14 --from checkov==3.4.3 checkov -d . --create-baseline --baseline ""
+   pre-commit run checkov-baseline --hook-stage manual --all-files
    ```
 
-   It prints the findings and writes `.checkov.baseline`. The first run installs checkov
-   again, which takes about as long as the hook's first run (see
-   [What installs locally](#what-installs-locally)). `--baseline ""` ignores any baseline
-   already set in `.checkov.yaml`. Without it, checkov writes an empty baseline when one
-   is set (checked with 3.4.3).
+   It prints every finding in the repo and writes `.checkov.baseline`. It uses the same
+   checkov as the commit hook, so nothing new installs. Keep `--all-files`: without it,
+   pre-commit sets aside your unstaged changes while the hook runs. The hook's
+   `--baseline ""` ignores any baseline already set in `.checkov.yaml` (without it,
+   checkov writes an empty baseline), and `--soft-fail` lets it pass in block mode too.
 
 2. **Track the backlog outside the repo.** Put the printed findings in your team's issue
    tracker with an owner and a date: one ticket with the list, or one per resource.
@@ -158,12 +159,12 @@ old findings still need fixing: the baseline is a backlog, not an exception list
 
 From then on, only findings that aren't in the baseline fail the hook. Baselined ones
 count under `Skipped checks` on every run, so the backlog stays in view. Here a commit adds
-a security group open on port 3389 to a repo with 13 baselined findings:
+`rdp.tf`, a security group open on port 3389, to a repo with 13 baselined findings:
 
 ```text
 Checkov..................................................................Failed
 - hook id: checkov
-- duration: 9.01s
+- duration: 8.91s
 - exit code: 1
 
 terraform scan results:
@@ -172,18 +173,30 @@ Passed checks: 0, Failed checks: 2, Skipped checks: 13
 
 Check: CKV_AWS_25: "Ensure no security groups allow ingress from 0.0.0.0:0 to port 3389"
 	FAILED for resource: aws_security_group.rdp_open
-	File: \main.tf:34-44
-...
+	File: \rdp.tf:4-15
+Check: CKV2_AWS_5: "Ensure that Security Groups are attached to another resource"
+	FAILED for resource: aws_security_group.rdp_open
+	File: \rdp.tf:4-15
+Baseline analysis report using .checkov.baseline - only new failed checks with respect to the baseline are reported
 ```
 
 **Working the backlog down:**
 
-- To print everything, baselined or not, run the step 1 command without
-  `--create-baseline`.
-- After you fix findings, run the step 1 command again and commit the new
-  `.checkov.baseline`. Its diff should only remove lines. An added line means a new
-  finding is being accepted without review. Fix it, or skip it inline with a reason (see
-  [Tuning](#tuning)), so the reason sits next to the code.
+- To print everything, baselined or not, run the step 1 command. It rewrites
+  `.checkov.baseline` too, but if nothing changed, the file stays byte-for-byte the same.
+- After you fix findings, run the step 1 command again. Because the baseline changes, the
+  hook reports `Failed` with `files were modified by this hook`. Review the diff and commit
+  it with the fix.
+- In that diff, look for a resource or check ID that isn't in the old file. That's a new
+  finding being accepted without review. Fix it, or skip it inline with a reason (see
+  [Tuning](#tuning)), so the reason sits next to the code. Not every added line is one:
+  removing the last check ID in a list also changes the line above it, and a resource
+  that moved to another file shows up under a new `"file"` entry.
+- If your CI runs `pre-commit run --all-files --hook-stage manual` (as the
+  [gitleaks](../gitleaks/README.md) history scan suggests), that runs `checkov-baseline`
+  too, as a second checkov scan. It fails whenever the committed `.checkov.baseline` is
+  out of date, for example when a pull request fixes a finding without updating it, so
+  the file can't drift from the code.
 - Review changes to `.checkov.baseline` like code. If your Git host supports code owners,
   make your security reviewer an owner of it.
 - When the backlog is done, delete the two baseline lines from `.checkov.yaml`, then

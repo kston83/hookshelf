@@ -8,3 +8,13 @@
         # Terraform JSON and Dockerfiles, and print findings even when it passes.
         files: \.(tf|tf\.json|tfvars)$|(^|/)(Dockerfile|Containerfile)[^/]*$|\.[dD]ockerfile$
         verbose: true
+      # Writes .checkov.baseline from every finding in the repo, baselined or not. Runs only
+      # when asked (see the README's "Baseline the backlog"):
+      #   pre-commit run checkov-baseline --hook-stage manual --all-files
+      - id: checkov
+        alias: checkov-baseline
+        name: Checkov (write .checkov.baseline)
+        args: [--create-baseline, --baseline, "", --soft-fail]
+        always_run: true
+        verbose: true
+        stages: [manual]
