@@ -15,6 +15,22 @@ Curated, pinned pre-commit security hooks that you copy into your repo and own.
 Every hook comes from the tool provider's own repo. Once copied, nothing in your repo
 depends on this one.
 
+## How long does the first install take on my machine?
+
+Each tool's README gives a range measured on GitHub's runners and an older Windows laptop.
+To measure a DevOps laptop or a Jenkins agent, install [uv](https://docs.astral.sh/uv/)
+and run:
+
+```sh
+git clone https://github.com/kston83/hookshelf
+cd hookshelf
+uv run scripts/measure_install.py
+```
+
+It installs each tool into its own temporary pre-commit cache, deletes the cache afterwards,
+and prints a table to paste back. The table also shows whether the machine can reach
+GitHub, PyPI and the Go proxy. Add `--without-go` to see what a machine without Go gets.
+
 ## Working on this repo
 
 This repo uses [uv](https://docs.astral.sh/uv/) and Python 3.14 (uv installs it for you):

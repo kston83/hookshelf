@@ -1,0 +1,7 @@
+  # Dockerfile best practices and shell mistakes (warns). hadolint reads .hadolint.yaml
+  # from the repo root; delete `no-fail: true` there to block.
+  - repo: https://github.com/AleksaC/hadolint-py
+    rev: v2.15.1
+    hooks:
+      - id: hadolint
+        verbose: true
