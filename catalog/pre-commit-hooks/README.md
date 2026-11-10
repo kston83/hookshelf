@@ -4,8 +4,8 @@
 
 ## What it catches
 
-- `detect-private-key`: a file containing a private key header
-  (`BEGIN RSA PRIVATE KEY`, `BEGIN OPENSSH PRIVATE KEY` ...).
+- `detect-private-key`: a file containing a private key header (RSA, EC, DSA, OpenSSH,
+  PGP and others).
 - `check-merge-conflict`: leftover conflict markers (`<<<<<<<`) while a merge or rebase is in
   progress.
 
@@ -14,6 +14,9 @@
 A small Python package in pre-commit's cache. It takes a few seconds on first run.
 
 ## Tuning
+
+To also check for conflict markers outside a merge, add `args: [--assume-in-merge]` to
+`check-merge-conflict`.
 
 Exclude a path that legitimately holds a key-like test file:
 

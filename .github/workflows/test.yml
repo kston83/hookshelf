@@ -5,14 +5,19 @@ on:
     branches: [main]
   pull_request:
 
-permissions:
-  contents: read
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   fixtures:
     # Assembles .pre-commit-config.yaml from catalog/, runs real pre-commit on
-    # tests/fixtures/ and checks each fixture passes or fails as expected.
-    runs-on: ubuntu-latest
+    # tests/fixtures/ and checks each hook passes or fails as expected.
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -22,4 +27,12 @@ jobs:
         with:
           version: "0.13.7"
       - run: uv sync --locked
+      - name: Install gitleaks at the catalog's pinned version (for the rule tests)
+        run: |
+          rev="$(awk '$1 == "rev:" { print $2; exit }' catalog/gitleaks/snippet.yaml)"
+          echo "gitleaks ${rev}"
+          go install "github.com/zricethezav/gitleaks/v8@${rev}"
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
       - run: uv run --locked pytest -v
+        env:
+          REQUIRE_GITLEAKS: "1"

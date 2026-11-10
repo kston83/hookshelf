@@ -12,6 +12,8 @@ a provider hook seems to need a wrapper, stop and ask.
   guess a version or SHA.
 - Prefer a provider's remote hook with a pinned `rev` over a `repo: local` hook.
 - Test with real `pre-commit` runs on `tests/fixtures/`, not only unit tests.
+- Never commit anything secret-looking. Fixtures use `<FAKE_...>` markers, which
+  `tests/conftest.py` fills in at run time.
 - Keep each PR reviewable in about 15 minutes.
 - Use uv with Python 3.14 for this repo's tooling: `uv sync`, then `uv run pytest`. Add
   dev dependencies to `pyproject.toml` pinned with `==`, and commit `uv.lock`.

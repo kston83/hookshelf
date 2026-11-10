@@ -4,7 +4,7 @@
       "command": "npx",
       "env": {
         "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
-        "MY_SERVICE_PAT": "q7Ft2LmZp9Xc4Rv8Kd1Wn6Hs3Jb5Ye0A"
+        "MY_SERVICE_PAT": "<FAKE_MCP_TOKEN>"
       }
     }
   }
