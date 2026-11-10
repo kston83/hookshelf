@@ -60,9 +60,13 @@ so the first run is slow and needs network access. `test_gitleaks_rules.py` need
   and `args: [--force]` in the tflint snippet. `block_mode()` in
   `tests/test_terraform_docker.py` deletes those exact strings, so keep them byte-for-byte.
   It also reads the suggested skips from the commented `#   - CKV_...` lines in
-  `.checkov.yaml`.
+  `.checkov.yaml`. The baseline test uncomments `# baseline:` and
+  `# output-baseline-as-skipped:` there, so keep those byte-for-byte too.
 - gitleaks has a second hook, `gitleaks-history`, in the `manual` stage. CI runs it with
   `pre-commit run --all-files --hook-stage manual`.
+- checkov also has a `manual`-stage hook, `checkov-baseline`, which writes
+  `.checkov.baseline`. That same CI command runs it as well. The baseline test runs the one
+  `pre-commit run ` line under the checkov README's `### Baseline the backlog` heading.
 - `scripts/measure_install.py` is a standalone uv script with PEP 723 inline dependencies.
   It installs each tool into its own temporary pre-commit cache. `.github/workflows/measure.yml`
   runs it on GitHub's runners, and its numbers go into each tool's README.

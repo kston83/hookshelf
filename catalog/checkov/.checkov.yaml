@@ -10,6 +10,12 @@ framework:
 # Warn mode: findings print, but the commit goes through. Delete this line to block.
 soft-fail: true
 
+# Baseline: only findings that aren't in .checkov.baseline fail. Uncomment both lines
+# once you've created that file (see the README); checkov crashes if it's missing.
+# Baselined findings still count under "Skipped checks" on every run.
+# baseline: .checkov.baseline
+# output-baseline-as-skipped: true
+
 # Short output: failed checks only, no code snippets.
 compact: true
 quiet: true

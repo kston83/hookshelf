@@ -174,7 +174,8 @@ Check: CKV_AWS_24: "Ensure no security groups allow ingress from 0.0.0.0:0 to po
 	File: \main.tf:9-20
 ```
 
-That's the backlog you'll work through before switching the tool to block. If gitleaks or
+That's the backlog you'll work through, or baseline and track, before switching the tool
+to block (see [Move from warn to block](#move-from-warn-to-block)). If gitleaks or
 pre-commit-hooks fails, fix that before you commit: those findings block.
 
 ## 6. Commit
@@ -227,6 +228,12 @@ every commit. Once a tool's findings are cleaned up or suppressed, switch it to 
 tool at a time: [checkov](../catalog/checkov/README.md#warn-then-block),
 [tflint](../catalog/tflint/README.md#warn-then-block),
 [hadolint](../catalog/hadolint/README.md#warn-then-block).
+
+checkov scans the whole repo, so once it blocks, a finding in any file stops the commit.
+If its backlog is too big to clear first, record it in a baseline: commits are then only
+blocked by new findings. The baselined findings aren't accepted, just tracked somewhere
+else. Put them in your issue tracker with an owner, and work them down. See
+[Baseline the backlog](../catalog/checkov/README.md#baseline-the-backlog).
 
 ## Keep versions current
 
