@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "internal": {
+      "command": "npx",
+      "env": {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "MY_SERVICE_PAT": "<FAKE_MCP_TOKEN>"
+      }
+    }
+  }
+}

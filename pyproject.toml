@@ -1,0 +1,17 @@
+[project]
+name = "hookshelf"
+version = "0.0.0"
+description = "Curated, pinned pre-commit security hooks you copy in and own."
+license = "Apache-2.0"
+requires-python = ">=3.14"
+
+# Tooling for this repo only. Nothing here reaches a team's repo.
+[dependency-groups]
+dev = ["pre-commit==4.7.0", "pytest==9.2.0"]
+
+[tool.uv]
+package = false
+required-version = "==0.13.7"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

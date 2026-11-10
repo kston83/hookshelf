@@ -1,0 +1,5 @@
+# Which tools each stack recommends (ticked) or offers (unticked).
+# Tool names are folder names under catalog/. "base" applies to every repo.
+base:
+  recommended: [gitleaks, pre-commit-hooks]
+  optional: []

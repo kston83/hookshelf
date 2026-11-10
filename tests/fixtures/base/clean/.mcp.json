@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "docker",
+      "env": {
+        "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin",
+        "TOKEN_FILE": "~/secrets/mytoken.txt",
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    }
+  }
+}
